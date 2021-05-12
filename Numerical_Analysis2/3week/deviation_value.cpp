@@ -44,13 +44,13 @@ public:
 
 int main(){
   Deviation_Value devi;
-  int data = 100, sum = 1;
+  int data = 100, sum = 2;
   int all = 1000000;
   double hennsati=0;
 
-  for(;sum<=all;sum++){
+  for(;sum<=all;sum+=1){
     hennsati = devi.deviation(data, sum);
-    cout << hennsati << endl;
+    cout << sum << ": " << hennsati << endl;
   }
 
   return 0;
