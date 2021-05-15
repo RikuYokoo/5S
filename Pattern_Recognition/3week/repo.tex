@@ -1,0 +1,25 @@
+\documentclass[dvipdfmx]{jsarticle}
+\usepackage[dvipdfmx]{graphicx}
+
+\begin{document}
+\title{認識工学第3回課題}
+\author{19C1123 横尾陸}
+\date{\today}
+\maketitle
+
+\section{$p(W|X)$と$p(X|W)$の違いを述べよ.}
+$p(W|X)$は$X$という条件で起こる$W$が起こる条件付き確率のこと.\\
+$p(X|W)$は$W$という条件で起こる$X$が起こる条件付き確率である.
+
+\section{式変形の根拠を述べよ.}
+$\tilde{W}=argmax \: p(W|X)=argmax \: p(X|W)p(W)$を考える.\\
+条件付き確率は$p(W|X)=\frac{p(X\cap W)}{p(X)}$で求められる.\\
+乗法の定理$p(X\cap W)=p(W)\times p(W|X)$を使用し,
+$$p(W|X)=\frac{p(X\cap W)}{p(X)}=\frac{p(X|W)p(W)}{p(X)}$$
+となる.
+ここでは$W$について考えているので分母の$p(X)$は無視できるので
+$$\tilde{W}=argmax\:p(W|X)=argmax\:p(X|W)p(W)$$
+となる.
+
+\end{document}
+
