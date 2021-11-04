@@ -66,11 +66,15 @@ class DPmaching{
             stod >> templeat_fream.at(I);
             stod2 << info2.at(i);
             stod2 >> detect_fream.at(I);
-            cout << templeat_fream.at(I)<< endl;;
+  //          cout << templeat_fream.at(I)<< endl;;
           }
+          cout << i << endl;
         }
         cout << "end" << endl;
         cout << "koko";
+        for(int i=0;i<detect_fream.at(I);i++){
+          detect_data.at(I).push_back(fin);
+        }
         //templeat_data.at(I).resize(templeat_fream.at(I));
         //templeat_data[I].resize(templeat_fream.at(I));
         //stempleat.at(I).resize(templeat_fream.at(I));
@@ -149,7 +153,8 @@ int main(){
 
   dp.get_fream_and_voice_data();
   cout << "owatta" << endl;
-  dp.all_output();
+  //dp.all_output();
+
 
   return 0;
 }

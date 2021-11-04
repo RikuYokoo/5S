@@ -1,0 +1,357 @@
+\documentclass[dvipdfmx]{jsarticle}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{float,listings}
+
+\lstset{
+  basicstyle={\ttfamily},
+  identifierstyle={\small},
+  commentstyle={\smallitshape},
+  keywordstyle={\small\bfseries},
+  ndkeywordstyle={\small},
+  stringstyle={\small\ttfamily},
+  frame={tb},
+  breaklines=true,
+  columns=[l]{fullflexible},
+  numbers=left,
+  xrightmargin=0zw,
+  xleftmargin=3zw,
+  numberstyle={\scriptsize},
+  stepnumber=1,
+  numbersep=1zw,
+  lineskip=-0.5ex
+}
+
+\begin{document}
+\title{認識工学大レポート課題}
+\author{19C1123 横尾陸}
+\date{\today}
+\maketitle
+
+\section{目的}
+DPマッチングのアルゴリズムを利用し，単語音声認識実験を行い，100単語中の認識率を調査する．
+
+\section{方法}
+DPマッチングのアルゴリズムのプログラムを実装し，単語の認識率を調べる．
+今回自作でのプログラムを試みたが実装するまで行かなかった.(\ref{huga})
+19C1012井上叡さんのコード(\ref{satoshi})を用いて実験を行った．
+\begin{lstlisting}[caption=作成したプログラム,label=huga]
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <iomanip>
+#include <cmath>
+
+using namespace std;
+double local_distance(std::vector<double> fream_i, std::vector<double> fream_j);
+double min3(double x, double y, double z);
+
+int dpmaching(std::vector<std::vector<std::vector<double>>> &anser, std::vector<std::vector<double>> &detect){
+  cout << "stra\n";
+  double tmp=0, kai=0,r=0,m=0, l=0, min=0;
+  int flag=0, flag2=0;
+  std::vector<double> zero(15,0);
+  std::vector<double> ans(100);
+  for(int i=0;i < 100;i++){
+    std::vector<std::vector<double>> total(anser.at(i).size(), std::vector<double>(detect.size()));
+    cout << "for\n";
+    for(int j=0;j<anser.at(i).size();j++){
+      for(int k=0;k<detect.size();k++){
+        if(j==0 && k==0){
+          total.at(0).at(0) = local_distance(zero,zero);
+        }else if(j>0 && k-1 < 0){
+          total.at(j).at(0) = total.at(j-1).at(k) + local_distance(anser.at(i).at(j),zero);
+        }else if(k>0 && j-1 < 0){
+          total.at(0).at(k) = total.at(0).at(k-1) + local_distance(zero, detect.at(k));
+        }else{
+          r = total.at(j).at(k-1) + local_distance(anser.at(i).at(j), detect.at(k));
+          m = total.at(j-1).at(k-1) + 2 * local_distance(anser.at(i).at(j), detect.at(k));
+          l = total.at(j-1).at(k) + local_distance(anser.at(i).at(j), detect.at(k));
+          total.at(j).at(k) = min3(r, m, l);
+          }
+      }
+    }
+    ans.at(i) = total.at(anser.at(i).size()).at(detect.size()) / (double)(anser.at(i).size() + detect.size());
+    tmp = ans.at(i);
+    if(i==0) {
+      min = ans.at(i);
+      flag = i;
+    }else if(min > tmp){
+      min = tmp;
+      flag = i;
+    }
+  }
+  return flag;
+}
+
+double local_distance(std::vector<double> fream_i, std::vector<double> fream_j){
+  double ans=0, tmp=0, kai=0;
+  for(int i=0;i<15;i++){
+    tmp = fream_i.at(i)-fream_j.at(i);
+    ans += tmp*tmp;
+  }
+  return sqrt(ans);
+}
+
+double min3(double x, double y, double z)
+{
+  double min = x;
+
+  if (y < min) min = y;
+  if (z < min) min = z;
+  return (min);
+}
+
+
+int main(){
+  int flag=0, flag2=0;
+  std::vector<std::vector<std::vector<double>>> templeat_data(100), detect_data(100);
+  double ans=0;
+  std::vector<string> str1(3), str2(3);
+  for(int I=0;I<100;I++){
+    std::vector<string> info(3),info2(3),dev(4);
+    stringstream ss,ss2;
+    stringstream stod, stod2;
+    double fream,fream2;
+    std::string filename, filename2;
+    ss << "city011/" << "city011_" << std::setw(3) << std::setfill('0') << I+1 << ".txt";
+    ss2 << "city012/" << "city012_" << std::setw(3) << std::setfill('0') << I+1 << ".txt";
+    filename = ss.str();
+    filename2 = ss2.str();
+    std::ifstream fin(filename);
+    std::ifstream fin2(filename2);
+    for(int i=0;i<3;i++){
+      fin >> info.at(i);
+      fin2 >> info2.at(i);
+    }
+    stod << info.at(2);
+    stod >> fream;
+    stod2 << info2.at(2);
+    stod2 >> fream2;
+    templeat_data.at(I).resize(fream);
+    detect_data.at(I).resize(fream2);
+    fin.close();
+    fin2.close();
+    fin.open(filename);
+    fin2.open(filename2);
+    for(int i=0;i<fream;i++){
+      for(int j=0;j<15;j++){
+        stringstream ss;
+        double tem;
+        if(i==0){
+          fin >> dev.at(0);
+          fin >> dev.at(1);
+          fin >> dev.at(2);
+        }
+        vector<string> str(1);
+        fin >> str.at(0);
+        ss << str.at(0);
+        ss >> tem;
+        templeat_data.at(I).at(i).push_back(tem);
+      }
+    }
+    for(int i=0;i<fream2;i++){
+      for(int j=0;j<15;j++){
+        stringstream ss;
+        double tem;
+        if(i==0){
+          fin2 >> dev.at(0);
+          fin2 >> dev.at(1);
+          fin2 >> dev.at(2);
+        }
+        vector<string> str(1);
+        fin2 >> str.at(0);
+        ss << str.at(0);
+        ss >> tem;
+        detect_data.at(I).at(i).push_back(tem);
+      }
+    }
+    cout << I << endl;
+  }
+  for(int i=0;i<100;i++){
+    flag = dpmaching(templeat_data, detect_data.at(i));
+    if(flag == i) flag2++;
+  }
+  cout << flag2 << endl;
+  return 0;
+}
+
+\end{lstlisting}
+\begin{lstlisting}[caption=井上さんのプログラム,label=satoshi]
+#include <fstream>
+#include <string>
+#include <vector>
+#include <iostream>
+#include <experimental/filesystem>
+#include <cmath>
+#include <algorithm>
+using namespace std;
+class file_input
+{
+public:
+    file_input();
+    std::ifstream ifs;
+    std::vector<std::string> cities = {"city011", "city012", "city021", "city022"};
+    const std::string root = "/home/riku/GIT/5S/Numerical_Analysis2/DPmaching/";
+    std::vector<std::vector<std::string>> filenames;
+    using data_t = std::vector<std::vector<std::vector<std::vector<float>>>>;
+    data_t data; //[フォルダ][ファイルが何番目か][行][列]
+    static const int dimension = 15;
+    data_t getfiledatas();
+    float local_distance(const std::vector<float> &frame_i, const std::vector<float> &frame_j);
+    int dpMatching(int tmpfolder, int tmpfile_num, int folder);
+};
+file_input::file_input()
+{
+    filenames.resize(4);
+    data.resize(4);
+    for (auto &a : data)
+    {
+        a.resize(100);
+    }
+}
+file_input::data_t file_input::getfiledatas()
+{
+    int city_num = 0;
+    for (const auto &city : cities)
+    {
+        std::string now = root + city;
+        for (const std::experimental::filesystem::directory_entry &i : std::experimental::filesystem::directory_iterator(now))
+        {
+            filenames[city_num].push_back(i.path().filename().string());
+        }
+        std::sort(filenames[city_num].begin(), filenames[city_num].end());
+        int file_count = 0;
+        for (const auto &name : filenames[city_num])
+        {
+            ifs.open(now + "/" + name);
+            std::string s;
+            ifs >> s;
+            ifs >> s;
+            int rows = 0;
+            ifs >> rows;
+            data[city_num][file_count].resize(rows);
+            for (int i = 0; i < rows; ++i)
+            {
+                float tmp;
+                for (int j = 0; j < dimension; ++j)
+                {
+                    ifs >> tmp;
+                    data[city_num][file_count][i].push_back(tmp);
+                }
+            }
+            ifs.close();
+            file_count++;
+        }
+        city_num++;
+    }
+    return this->data;
+}
+int file_input::dpMatching(int tmpfolder, int tmpfile_num, int target_folder)
+{
+    float min_distance = 1e9;
+    auto template_data = data[tmpfolder][tmpfile_num];
+    int voice_num = 0;
+    int shortest = 0;
+    for (const auto &target : data[target_folder])
+    {
+        int max_i = template_data.size();
+        int max_j = target.size();
+        std::vector<std::vector<double>> result(template_data.size(), std::vector<double>(target.size(), 1e8));
+        result[0][0] = local_distance(template_data[0], target[0]);
+        for (int tmp_i = 0; tmp_i < max_i; ++tmp_i)
+        {
+            for (int target_j = 0; target_j < max_j; ++target_j)
+            {
+                if (tmp_i == 0 && target_j == 0)
+                    continue;
+                double min_num = 1e10;
+                if (tmp_i - 1 >= 0)
+                    min_num = std::min(min_num, local_distance(template_data[tmp_i], target[target_j]) + result[tmp_i - 1][target_j]);
+                if (target_j - 1 >= 0)
+                    min_num = std::min(min_num, local_distance(template_data[tmp_i], target[target_j]) + result[tmp_i][target_j - 1]);
+                if ((tmp_i - 1 >= 0) && (target_j - 1 >= 0))
+                    min_num = std::min(min_num, 2 * local_distance(template_data[tmp_i], target[target_j]) + result[tmp_i - 1][target_j - 1]);
+                result[tmp_i][target_j] = min_num;
+            }
+        }
+        if (min_distance >= result[max_i - 1][max_j - 1] / (max_i + max_j))
+        {
+            min_distance = result[max_i - 1][max_j - 1] / (max_i + max_j);
+            shortest = voice_num;
+        }
+        voice_num++;
+    }
+    if(shortest == tmpfile_num)
+        return 1;
+    else
+        return 0;
+}
+float file_input::local_distance(const std::vector<float> &frame_i, const std::vector<float> &frame_j)
+{
+    float result_distance = 0;
+    for (int i = 0; i < dimension; ++i)
+    {
+        result_distance += (frame_i[i] - frame_j[i]) * (frame_i[i] - frame_j[i]);
+    }
+    return std::sqrt(result_distance);
+}
+int main(int argc, char const *argv[])
+{
+    file_input files;
+    files.getfiledatas();
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            int n = 0;
+            if (i == j)
+            {
+                continue;
+            }
+            for (int k = 0; k < 100; ++k)
+            {
+                n += files.dpMatching(i,k,j);
+            }
+            std::cout << "template::" << files.cities[i] << " compared::" << files.cities[j] << std::endl;
+            std::cout << "result:: " << n << "%"<< std::endl;
+        }
+    }
+    return 0;
+}
+
+\end{lstlisting}
+\section{結果}
+DPmachigした結果を表\ref{dp},表\ref{dd}に示す．
+表\ref{dp}は斜めの移動時に2倍した音声認識率で表\ref{dd}は斜めの移動時1倍した音声認識率である．
+\begin{table}[H]
+\caption=斜め遷移の重みを2倍にしたときの音声認識率
+\label{dp}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+template\textbackslash{}input & city011 & city012 & city021 & city022 \\ \hline
+city011                       & x       & 99\%    & 90\%    & 84\%    \\ \hline
+city012                       & 100\%   & x       & 92\%    & 86\%    \\ \hline
+city021                       & 83\%    & 91\%    & x       & 99\%    \\ \hline
+city022                       & 86\%    & 94\%    & 100\%   & x       \\ \hline
+\end{tabular}
+\end{table}
+\begin{table}[H]
+\caption=斜め遷移の重みを1倍にしたときの音声認識率
+\label{dd}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+template\textbackslash{}input & city011 & city012 & city021 & city022 \\ \hline
+city011                       & x       & 99\%    & 95\%    & 94\%    \\ \hline
+city012                       & 100\%   & x       & 96\%    & 98\%    \\ \hline
+city021                       & 92\%    & 99\%    & x       & 100\%   \\ \hline
+city022                       & 95\%    & 98\%    & 100\%   & x       \\ \hline
+\end{tabular}
+\end{table}
+結果を見ると高い確率で認識できているのがわかる．同一話者同士だと100\%が出るなど精度の高さがわかる．斜め遷移を1倍に変更すると認識精度があがったのがわかる．
+
+\section{考察}
+斜め移動を1倍にしたときに認識精度が上がったのは授業や実際に見たとおりわかるが斜め移動は移動距離が多いので縦横の移動と同じ倍率だと斜めが有利になり認識精度が上がったと考える．
+
+\end{document}
+
